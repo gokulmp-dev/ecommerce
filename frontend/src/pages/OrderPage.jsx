@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const API_URL = import.meta.env.VITE_API_URL
 
 const OrderPage = () => {
   const { id } = useParams()
@@ -36,6 +36,8 @@ const OrderPage = () => {
   const handleCancel = async () => {
     if (!window.confirm('Are you sure you want to cancel this order?')) return
     setCancelling(true)
+    setError('')
+    setMessage('')
     try {
       const res = await fetch(`${API_URL}/api/orders/${id}/cancel`, { method: 'PUT', headers: { Authorization: `Bearer ${user.token}` } })
       const data = await res.json()
@@ -47,6 +49,8 @@ const OrderPage = () => {
   const handleReturn = async () => {
     if (!returnReason.trim()) { setError('Please enter a reason.'); return }
     setSubmittingReturn(true)
+    setError('')
+    setMessage('')
     try {
       const res = await fetch(`${API_URL}/api/orders/${id}/return`, {
         method: 'PUT',
@@ -62,6 +66,8 @@ const OrderPage = () => {
   const handleReview = async () => {
     if (!comment.trim()) { setError('Please enter a comment.'); return }
     setSubmittingReview(true)
+    setError('')
+    setMessage('')
     try {
       const res = await fetch(`${API_URL}/api/orders/${id}/review`, {
         method: 'POST',
@@ -75,22 +81,28 @@ const OrderPage = () => {
   }
 
   if (loading) return <p className="text-center mt-10">Loading order...</p>
+  if (!order) return <p className="text-center mt-10 text-red-500">Order not found.</p>
+
+  const statusLabel = order.isCancelled ? 'Cancelled' : order.isDelivered ? 'Delivered' : 'Processing'
+  const statusColor = order.isCancelled
+    ? 'bg-red-100 text-red-700 border-red-400'
+    : order.isDelivered
+    ? 'bg-green-100 text-green-700 border-green-400'
+    : 'bg-yellow-100 text-yellow-700 border-yellow-400'
 
   return (
     <div className="max-w-3xl mx-auto">
-      {order.isCancelled ? (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-xl mb-6 text-center">
-          <h1 className="text-2xl font-bold">❌ Order Cancelled</h1>
-          <p className="text-sm mt-1">Order ID: {order._id}</p>
-        </div>
-      ) : (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-xl mb-6 text-center">
-          <h1 className="text-2xl font-bold">✅ Order Placed Successfully!</h1>
-          <p className="text-sm mt-1">Order ID: {order._id}</p>
-        </div>
-      )}
+      <div className={`border px-6 py-4 rounded-xl mb-6 text-center ${statusColor}`}>
+        <h1 className="text-2xl font-bold">
+          {order.isCancelled ? '❌ Order Cancelled' : order.isDelivered ? '✅ Order Delivered' : '✅ Order Placed Successfully!'}
+        </h1>
+        <p className="text-sm mt-1">Order ID: {order._id}</p>
+        <p className="text-sm font-semibold mt-1">Status: {statusLabel}</p>
+      </div>
+
       {message && <div className="bg-green-100 text-green-700 px-4 py-3 rounded-xl mb-4 text-center font-semibold">{message}</div>}
       {error && <div className="bg-red-100 text-red-600 px-4 py-3 rounded-xl mb-4 text-center">{error}</div>}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
@@ -98,15 +110,14 @@ const OrderPage = () => {
           <p>{order.shippingAddress.city}, {order.shippingAddress.postalCode}</p>
           <p>{order.shippingAddress.country}</p>
           <div className="mt-3">
-            {order.isCancelled ? (
-              <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">Cancelled</span>
-            ) : order.isDelivered ? (
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Delivered</span>
-            ) : (
-              <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">Processing</span>
-            )}
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+              order.isCancelled ? 'bg-red-100 text-red-700' : order.isDelivered ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+            }`}>
+              {statusLabel}
+            </span>
           </div>
         </div>
+
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-xl font-bold mb-4">Order Items</h2>
           <div className="flex flex-col gap-3">
@@ -122,6 +133,7 @@ const OrderPage = () => {
           <div className="flex justify-between font-bold text-lg"><span>Total:</span><span className="text-yellow-500">₹{order.totalPrice.toFixed(2)}</span></div>
         </div>
       </div>
+
       <div className="bg-white rounded-xl shadow-md p-6 mt-6">
         <h2 className="text-xl font-bold mb-4">Actions</h2>
         <div className="flex flex-wrap gap-3">
@@ -134,7 +146,11 @@ const OrderPage = () => {
             <button onClick={() => setShowReturnForm(!showReturnForm)} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-semibold">🔄 Return / Replace</button>
           )}
           {order.returnRequested && (
-            <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${order.returnStatus === 'approved' ? 'bg-green-100 text-green-700' : order.returnStatus === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-700'}`}>
+            <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+              order.returnStatus === 'approved' ? 'bg-green-100 text-green-700'
+              : order.returnStatus === 'rejected' ? 'bg-red-100 text-red-600'
+              : 'bg-blue-100 text-blue-700'
+            }`}>
               {order.returnType === 'replace' ? '🔄 Replacement' : '↩️ Return'} Request: {order.returnStatus.charAt(0).toUpperCase() + order.returnStatus.slice(1)}
             </span>
           )}
@@ -142,6 +158,7 @@ const OrderPage = () => {
             <button onClick={() => setShowReviewForm(!showReviewForm)} className="bg-yellow-500 text-gray-900 px-4 py-2 rounded-lg hover:bg-yellow-400 transition font-semibold">⭐ Write a Review</button>
           )}
         </div>
+
         {showReturnForm && (
           <div className="mt-4 border rounded-xl p-4 bg-gray-50">
             <h3 className="font-bold mb-3">Return / Replace Request</h3>
@@ -156,6 +173,7 @@ const OrderPage = () => {
             </div>
           </div>
         )}
+
         {showReviewForm && (
           <div className="mt-4 border rounded-xl p-4 bg-gray-50">
             <h3 className="font-bold mb-3">Write a Review</h3>
@@ -172,6 +190,7 @@ const OrderPage = () => {
             </div>
           </div>
         )}
+
         {order.reviews && order.reviews.length > 0 && (
           <div className="mt-6">
             <h3 className="font-bold mb-3">Reviews</h3>
@@ -190,8 +209,10 @@ const OrderPage = () => {
           </div>
         )}
       </div>
+
       <button onClick={() => navigate('/')} className="mt-6 w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-yellow-500 transition font-semibold">Continue Shopping</button>
     </div>
   )
 }
+
 export default OrderPage

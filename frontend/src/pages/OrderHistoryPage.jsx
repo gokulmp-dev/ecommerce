@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const API_URL = import.meta.env.VITE_API_URL
 
 const OrderHistoryPage = () => {
   const { user } = useAuth()
@@ -10,9 +10,8 @@ const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  if (!user) { navigate('/login'); return null }
-
   useEffect(() => {
+    if (!user) { navigate('/login'); return }
     const fetchOrders = async () => {
       try {
         const res = await fetch(`${API_URL}/api/orders/myorders`, {
@@ -24,7 +23,7 @@ const OrderHistoryPage = () => {
       } catch { setLoading(false) }
     }
     fetchOrders()
-  }, [])
+  }, [user])
 
   if (loading) return <p className="text-center mt-10">Loading orders...</p>
 
@@ -44,7 +43,8 @@ const OrderHistoryPage = () => {
                 <div><p className="text-xs text-gray-400">Order ID</p><p className="font-mono text-sm font-semibold">{order._id}</p></div>
                 <div className="text-right"><p className="text-xs text-gray-400">Date</p><p className="text-sm">{new Date(order.createdAt).toLocaleDateString()}</p></div>
                 <div className="text-right"><p className="text-xs text-gray-400">Total</p><p className="text-yellow-500 font-bold">₹{order.totalPrice.toFixed(2)}</p></div>
-                <div className="text-right"><p className="text-xs text-gray-400">Status</p>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">Status</p>
                   {order.isCancelled ? (
                     <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">Cancelled</span>
                   ) : order.isDelivered ? (
@@ -71,4 +71,5 @@ const OrderHistoryPage = () => {
     </div>
   )
 }
+
 export default OrderHistoryPage
