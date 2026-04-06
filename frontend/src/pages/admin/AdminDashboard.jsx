@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/stats", {
+    fetch(`${API_URL}/api/admin/stats`, {
       headers: { Authorization: `Bearer ${user.token}` },
     })
       .then((r) => r.json())

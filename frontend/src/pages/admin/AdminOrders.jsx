@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function AdminOrders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
@@ -11,7 +13,7 @@ export default function AdminOrders() {
 
   const load = () => {
     setLoading(true);
-    fetch("/api/admin/orders", { headers })
+    fetch(`${API_URL}/api/admin/orders`, { headers })
       .then((r) => r.json())
       .then((d) => { setOrders(d); setLoading(false); });
   };
@@ -19,12 +21,12 @@ export default function AdminOrders() {
   useEffect(load, []);
 
   const markDelivered = async (id) => {
-    await fetch(`/api/admin/orders/${id}/deliver`, { method: "PUT", headers });
+    await fetch(`${API_URL}/api/admin/orders/${id}/deliver`, { method: "PUT", headers });
     load();
   };
 
   const handleReturn = async (id, action) => {
-    await fetch(`/api/admin/orders/${id}/return-action`, {
+    await fetch(`${API_URL}/api/admin/orders/${id}/return-action`, {
       method: "PUT", headers,
       body: JSON.stringify({ action }),
     });

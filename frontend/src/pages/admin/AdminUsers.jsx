@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function AdminUsers() {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
@@ -11,7 +13,7 @@ export default function AdminUsers() {
 
   const load = () => {
     setLoading(true);
-    fetch("/api/admin/users", { headers })
+    fetch(`${API_URL}/api/admin/users`, { headers })
       .then((r) => r.json())
       .then((d) => { setUsers(d); setLoading(false); });
   };
@@ -19,7 +21,7 @@ export default function AdminUsers() {
   useEffect(load, []);
 
   const handleDelete = async (id) => {
-    await fetch(`/api/admin/users/${id}`, { method: "DELETE", headers });
+    await fetch(`${API_URL}/api/admin/users/${id}`, { method: "DELETE", headers });
     setDeleteId(null);
     load();
   };

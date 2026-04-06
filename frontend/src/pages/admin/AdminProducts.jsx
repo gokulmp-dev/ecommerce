@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL;
 const empty = { name: "", price: "", image: "", brand: "", category: "", description: "", countInStock: "" };
 
 export default function AdminProducts() {
@@ -17,7 +18,7 @@ export default function AdminProducts() {
 
   const load = () => {
     setLoading(true);
-    fetch("/api/admin/products", { headers })
+    fetch(`${API_URL}/api/admin/products`, { headers })
       .then((r) => r.json())
       .then((d) => { setProducts(d); setLoading(false); });
   };
@@ -30,7 +31,7 @@ export default function AdminProducts() {
   const handleSave = async () => {
     setSaving(true);
     const method = editId ? "PUT" : "POST";
-    const url = editId ? `/api/admin/products/${editId}` : "/api/admin/products";
+    const url = editId ? `${API_URL}/api/admin/products/${editId}` : `${API_URL}/api/admin/products`;
     await fetch(url, { method, headers, body: JSON.stringify(form) });
     setSaving(false);
     setShowModal(false);
@@ -38,7 +39,7 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (id) => {
-    await fetch(`/api/admin/products/${id}`, { method: "DELETE", headers });
+    await fetch(`${API_URL}/api/admin/products/${id}`, { method: "DELETE", headers });
     setDeleteId(null);
     load();
   };
@@ -99,7 +100,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#1a1a1c] border border-white/10 rounded-2xl w-full max-w-lg p-7">
@@ -143,7 +143,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* Delete Confirm */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#1a1a1c] border border-white/10 rounded-2xl p-7 max-w-sm w-full text-center">
