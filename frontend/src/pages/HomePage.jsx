@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import ProductCard from '../components/ProductCard'
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+
 const HomePage = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const res = await fetch('http://localhost:5000/api/products')
+      const res = await fetch(`${API_URL}/api/products`)
       const data = await res.json()
       setProducts(data)
       setLoading(false)
