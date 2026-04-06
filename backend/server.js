@@ -17,8 +17,7 @@ connectDB();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://ecommerce-production-7416.up.railway.app",
-    /\.vercel\.app$/
+    "https://ecommerce-dun-tau.vercel.app"
   ],
   credentials: true
 }));
